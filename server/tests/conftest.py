@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
 
 from database.database import get_db
 from main import app
-from models.user_models import Base
+from models.models import Base
 
 SQLALCHEMY_DATABASE_URL = (
     "postgresql+psycopg://postgres:postgres@localhost:5433/test_db"

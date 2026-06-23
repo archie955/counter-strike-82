@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from authentication import auth
 from database.database import get_db
-from models import user_models
+from models import models
 from schemas import token_schemas, user_schemas
 from services import user_service
 
@@ -42,7 +42,7 @@ async def login(
 async def update_user(
     updated_payload: user_schemas.UserUpdate,
     db: AsyncSession = Depends(get_db),
-    user: user_models.User = Depends(auth.get_current_user),
+    user: models.User = Depends(auth.get_current_user),
 ):
     updated_user = await user_service.update(db=db, user=user, updated=updated_payload)
 
@@ -52,7 +52,7 @@ async def update_user(
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     db: AsyncSession = Depends(get_db),
-    user: user_models.User = Depends(auth.get_current_user),
+    user: models.User = Depends(auth.get_current_user),
 ):
     await user_service.delete(db=db, user=user)
     return

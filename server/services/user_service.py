@@ -9,7 +9,7 @@ from exceptions.app_exceptions import (
     DataAlreadyExistsError,
     InvalidCredentialsError,
 )
-from models import user_models
+from models import models
 from schemas import token_schemas, user_schemas
 from services.helpers import safe_commit
 from utils import utils
@@ -22,10 +22,10 @@ async def create_user(
 ) -> user_schemas.UserOut:
     existing_user = (
         await db.execute(
-            select(user_models.User).where(
+            select(models.User).where(
                 or_(
-                    user_models.User.email == user.email,
-                    user_models.User.username == user.username,
+                    models.User.email == user.email,
+                    models.User.username == user.username,
                 )
             )
         )
@@ -34,7 +34,7 @@ async def create_user(
     if existing_user:
         raise DataAlreadyExistsError(datatype="User")
 
-    new_user = user_models.User(
+    new_user = models.User(
         email=user.email,
         username=user.username,
         hashed_password=utils.hash(user.password),
@@ -55,10 +55,10 @@ async def login(
 ) -> token_schemas.UserToken:
     user = (
         await db.execute(
-            select(user_models.User).where(
+            select(models.User).where(
                 or_(
-                    user_models.User.email == username,
-                    user_models.User.username == username,
+                    models.User.email == username,
+                    models.User.username == username,
                 )
             )
         )
@@ -79,7 +79,7 @@ async def login(
 
 
 async def update(
-    db: AsyncSession, user: user_models.User, updated: user_schemas.UserUpdate
+    db: AsyncSession, user: models.User, updated: user_schemas.UserUpdate
 ) -> user_schemas.UserOut:
     if not utils.verify(updated.password, user.hashed_password):
         raise InvalidCredentialsError()
@@ -105,7 +105,7 @@ async def update(
     return user_schemas.UserOut.model_validate(user)
 
 
-async def delete(db: AsyncSession, user: user_models.User):
+async def delete(db: AsyncSession, user: models.User):
     await db.delete(user)
     await db.commit()
 
