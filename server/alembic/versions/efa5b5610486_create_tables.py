@@ -67,6 +67,24 @@ def upgrade() -> None:
     op.create_index("ix_users_username", "users", ["username"])
 
     op.create_table(
+        "teams",
+        sa.Column(
+            "id",
+            sa.Integer,
+            primary_key=True,
+            autoincrement=True,
+            nullable=False,
+        ),
+        sa.Column(
+            "name",
+            sa.String(100),
+            nullable=False,
+        ),
+        sa.Column("igl", sa.Boolean, nullable=False),
+        sa.Column("awp", sa.Boolean, nullable=False),
+    )
+
+    op.create_table(
         "players",
         sa.Column(
             "id",
@@ -81,8 +99,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column(
-            "team",
-            sa.String(200),
+            "team_id",
+            sa.Integer,
+            sa.ForeignKey("teams.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
@@ -110,12 +129,12 @@ def upgrade() -> None:
         ),
     )
 
-    op.create_index("ix_players_team", "players", ["team"])
+    op.create_index("ix_players_team_id", "players", ["team"])
     op.create_index("ix_players_name", "players", ["name"])
     op.create_index("ix_players_role", "players", ["role"])
     op.create_index("ix_players_major", "players", ["major"])
     op.create_unique_constraint(
-        "uq_players_name_team_major", "players", ["name", "team", "major"]
+        "uq_players_name_team_id_major", "players", ["name", "team", "major"]
     )
 
     op.create_table(
@@ -180,8 +199,8 @@ def downgrade() -> None:
     op.drop_index("ix_lineups_user_id", "lineups")
     op.drop_table("lineups")
 
-    op.drop_constraint("uq_players_name_team_major", "players")
-    op.drop_index("ix_players_team", "players")
+    op.drop_constraint("uq_players_name_team_id_major", "players")
+    op.drop_index("ix_players_team_id", "players")
     op.drop_index("ix_players_name", "players")
     op.drop_index("ix_players_role", "players")
     op.drop_index("ix_players_major", "players")

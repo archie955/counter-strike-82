@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import (
     ARRAY,
     DECIMAL,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -55,33 +56,51 @@ class User(Base):
         onupdate=func.now(),
     )
 
-    best_lineup: Mapped["Lineups"] = relationship(
-        "Lineups", back_populates="owner", cascade="all, delete-orphan"
+    best_lineup: Mapped["Lineup"] = relationship(
+        "Lineup", back_populates="owner", cascade="all, delete-orphan"
     )
 
     @validates("email")
-    def validate_email(self, key, value):
+    def validate_email(self, key, value: str) -> str:
         if re.match(r"^\S+@\S+\.\S+$", value):
             return value
         else:
             raise ValueError("Invalid Email Format")
 
     @validates("username")
-    def validate_username(self, key, value):
+    def validate_username(self, key, value: str) -> str:
         if len(value) < 4:
             raise ValueError("Username is too short")
         return value
+
+
+class Team(Base):
+    __tablename__ = "teams"
+
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, nullable=False
+    )
+
+    name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
+
+    igl: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+    awp: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+    players: Mapped[list["Player"]] = relationship(
+        "Player", back_populates="team", cascade="all, delete-orphan"
+    )
 
 
 class Player(Base):
     __tablename__ = "players"
 
     __table_args__ = (
-        Index("ix_players_team", "team"),
+        Index("ix_players_team_id", "team_id"),
         Index("ix_players_name", "name"),
         Index("ix_players_role", "role"),
         Index("ix_players_major", "major"),
-        UniqueConstraint("name", "team", "major"),
+        UniqueConstraint("name", "team_id", "major"),
     )
 
     id: Mapped[int] = mapped_column(
@@ -90,7 +109,9 @@ class Player(Base):
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
 
-    team: Mapped[str] = mapped_column(String(200), nullable=False)
+    team_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False
+    )
 
     nationality: Mapped[Nationality] = mapped_column(nat, nullable=False)
 
@@ -104,14 +125,16 @@ class Player(Base):
         Integer, CheckConstraint("igl > 0 AND igl < 5"), nullable=True
     )
 
+    team: Mapped["Team"] = relationship("Team", back_populates="players")
+
     @validates("igl")
-    def validate_igl(self, key, value):
+    def validate_igl(self, key, value: int) -> int:
         if not 0 < value < 5:
             raise ValueError(f"Invalid IGL score {value}")
         return value
 
 
-class Lineups(Base):
+class Lineup(Base):
     __tablename__ = "lineups"
 
     id: Mapped[int] = mapped_column(
