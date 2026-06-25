@@ -7,11 +7,11 @@ config = ConfigDict(from_attributes=True)
 
 class Player(BaseModel):
     id: int
-    name: str
     team_id: int
+    name: str
     nationality: Nationality
     major: Majors
-    role: Roles
+    role: list[Roles]
     hltv: float
     igl: int | None
     model_config = config

@@ -75,13 +75,7 @@ def upgrade() -> None:
             autoincrement=True,
             nullable=False,
         ),
-        sa.Column(
-            "name",
-            sa.String(100),
-            nullable=False,
-        ),
-        sa.Column("igl", sa.Boolean, nullable=False),
-        sa.Column("awp", sa.Boolean, nullable=False),
+        sa.Column("name", sa.String(100), nullable=False, unique=True),
     )
 
     op.create_table(
@@ -94,14 +88,14 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column(
-            "name",
-            sa.String(100),
-            nullable=False,
-        ),
-        sa.Column(
             "team_id",
             sa.Integer,
             sa.ForeignKey("teams.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "name",
+            sa.String(100),
             nullable=False,
         ),
         sa.Column(
@@ -125,16 +119,18 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column(
-            "igl", sa.Integer, sa.CheckConstraint("igl > 0 AND igl < 5"), nullable=True
+            "igl",
+            sa.Integer,
+            sa.CheckConstraint("igl > 0 AND igl < 5"),
+            nullable=True,
         ),
     )
 
-    op.create_index("ix_players_team_id", "players", ["team"])
-    op.create_index("ix_players_name", "players", ["name"])
-    op.create_index("ix_players_role", "players", ["role"])
-    op.create_index("ix_players_major", "players", ["major"])
+    (op.create_index("ix_player_team_id", "players", ["team_id"]),)
+    (op.create_index("ix_player_major", "players", ["major"]),)
+    (op.create_index("ix_player_role", "players", ["role"]),)
     op.create_unique_constraint(
-        "uq_players_name_team_id_major", "players", ["name", "team", "major"]
+        "uq_player_name_team_major", "players", ["name", "team_id", "major"]
     )
 
     op.create_table(
@@ -154,31 +150,31 @@ def upgrade() -> None:
             unique=True,
         ),
         sa.Column(
-            "igl",
+            "igl_id",
             sa.Integer,
             sa.ForeignKey("players.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
-            "awp",
+            "awp_id",
             sa.Integer,
             sa.ForeignKey("players.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
-            "rifle_1",
+            "rifle_1_id",
             sa.Integer,
             sa.ForeignKey("players.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
-            "rifle_2",
+            "rifle_2_id",
             sa.Integer,
             sa.ForeignKey("players.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
-            "flex",
+            "flex_id",
             sa.Integer,
             sa.ForeignKey("players.id", ondelete="CASCADE"),
             nullable=False,
@@ -199,12 +195,13 @@ def downgrade() -> None:
     op.drop_index("ix_lineups_user_id", "lineups")
     op.drop_table("lineups")
 
-    op.drop_constraint("uq_players_name_team_id_major", "players")
-    op.drop_index("ix_players_team_id", "players")
-    op.drop_index("ix_players_name", "players")
-    op.drop_index("ix_players_role", "players")
-    op.drop_index("ix_players_major", "players")
+    op.drop_constraint("uq_player_name_team_major", "players")
+    op.drop_index("ix_player_team_id", "players")
+    op.drop_index("ix_player_major", "players")
+    op.drop_index("ix_player_role", "players")
     op.drop_table("players")
+
+    op.drop_table("teams")
 
     op.drop_index("ix_users_email", "users")
     op.drop_index("ix_users_username", "users")

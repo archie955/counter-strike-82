@@ -4,7 +4,6 @@ from datetime import datetime
 from sqlalchemy import (
     ARRAY,
     DECIMAL,
-    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -78,14 +77,10 @@ class Team(Base):
     __tablename__ = "teams"
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True, nullable=False
+        Integer, primary_key=True, nullable=False, autoincrement=True
     )
 
     name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
-
-    igl: Mapped[bool] = mapped_column(Boolean, nullable=False)
-
-    awp: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     players: Mapped[list["Player"]] = relationship(
         "Player", back_populates="team", cascade="all, delete-orphan"
@@ -96,22 +91,21 @@ class Player(Base):
     __tablename__ = "players"
 
     __table_args__ = (
-        Index("ix_players_team_id", "team_id"),
-        Index("ix_players_name", "name"),
-        Index("ix_players_role", "role"),
-        Index("ix_players_major", "major"),
-        UniqueConstraint("name", "team_id", "major"),
+        Index("ix_player_team_id", "team_id"),
+        Index("ix_player_major", "major"),
+        Index("ix_player_role", "role"),
+        UniqueConstraint("name", "team_id", "major", name="uq_player_name_team_major"),
     )
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True, nullable=False
+        Integer, primary_key=True, nullable=False, autoincrement=True
     )
-
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     team_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False
     )
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     nationality: Mapped[Nationality] = mapped_column(nat, nullable=False)
 
@@ -149,23 +143,23 @@ class Lineup(Base):
         index=True,
     )
 
-    igl: Mapped[int] = mapped_column(
+    igl_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False
     )
 
-    awp: Mapped[int] = mapped_column(
+    awp_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False
     )
 
-    rifle_1: Mapped[int] = mapped_column(
+    rifle_1_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False
     )
 
-    rifle_2: Mapped[int] = mapped_column(
+    rifle_2_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False
     )
 
-    flex: Mapped[int] = mapped_column(
+    flex_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id", ondelete="CASCADE"), nullable=False
     )
 
