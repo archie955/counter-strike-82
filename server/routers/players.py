@@ -11,9 +11,9 @@ router = APIRouter(prefix="/players", tags=["Players"])
 @router.get(
     path="/{team_id}",
     status_code=status.HTTP_200_OK,
-    response_model=player_schemas.Team_Players,
+    response_model=player_schemas.Alt_Team_Players,
 )
-async def get_team_players(team_id: int, db: AsyncSession = Depends(get_db)):
-    team_players = player_service.get_team_players(team_id, db)
+async def get_team_players(db: AsyncSession = Depends(get_db)):
+    team_players = await player_service.get_player_choices(db)
 
     return team_players
